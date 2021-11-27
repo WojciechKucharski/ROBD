@@ -75,9 +75,16 @@ CREATE OR REPLACE PROCEDURE c##scott.dodaj_rodzaj_przedmiotu
     opis_ IN VARCHAR2
 )
 AS
+	id int;
 BEGIN
-    INSERT INTO c##scott.rodzaj_przedmiotu(id_rodzaj_przedmiotu, nazwa, typ, opis)
-    VALUES (c##scott.rodzaj_przedmiotu_seq.NEXTVAL, nazwa_, typ_, opis_);
+	id := c##scott.rodzaj_przedmiotu_seq.NEXTVAL;
+	IF typ_ = 'konsola' THEN
+		INSERT INTO c##scottt.rodzaj_przedmiotu@DATABASE_LINK1(id_rodzaj_przedmiotu, nazwa, typ, opis)
+		VALUES (id, nazwa_, typ_, opis_);
+	ELSE
+		INSERT INTO c##scott.rodzaj_przedmiotu(id_rodzaj_przedmiotu, nazwa, typ, opis)
+		VALUES (id, nazwa_, typ_, opis_);
+	END IF;
     commit;
 EXCEPTION
     WHEN others THEN
