@@ -89,10 +89,6 @@ END;
 DROP VIEW c##scott.klient_r;
 DROP SEQUENCE c##scott.klient_seq;
 DROP SYNONYM c##scott.klient_f;
-DROP SYNONYM c##scott.dodaj_klienta_pesel;
-
-CREATE SYNONYM c##scott.dodaj_klienta_pesel
-FOR c##scottt.dodaj_klienta@DATABASE_LINK1;
 
 CREATE SYNONYM c##scott.klient_f
 FOR c##scottt.klient@DATABASE_LINK1;
