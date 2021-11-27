@@ -12,8 +12,8 @@ CREATE TABLE c##scott.rodzaj_przedmiotu(
     id_rodzaj_przedmiotu int NOT NULL,
     nazwa VARCHAR2(30) NOT NULL,
     typ VARCHAR2(30) NOT NULL,
-    opis VARCHAR2(50) NOT NULL,
-    CONSTRAINTS pk_rodzaj_przedmiotu PRIMARY KEY (id_rodzaj_przedmiotu)
+    opis VARCHAR2(50) NOT NULL--,
+    --CONSTRAINTS pk_rodzaj_przedmiotu PRIMARY KEY (id_rodzaj_przedmiotu)
 );
 
 CREATE TABLE c##scott.klient(
@@ -21,36 +21,36 @@ CREATE TABLE c##scott.klient(
     imie VARCHAR2(25) NOT NULL,
     nazwisko VARCHAR2(25) NOT NULL,
     nr_telefonu Number(9) NOT NULL,
-    email VARCHAR2(30) NOT NULL,
-    CONSTRAINTS pk_klient PRIMARY KEY (id_klient)
+    email VARCHAR2(30) NOT NULL--,
+    --CONSTRAINTS pk_klient PRIMARY KEY (id_klient)
 );
 
 CREATE TABLE c##scott.wypozyczalnia(
     id_wypozyczalnia int NOT NULL,
     nazwa VARCHAR2(30) NOT NULL,
-    adres VARCHAR2(30) NOT NULL,
-    CONSTRAINTS pk_wypozyczalnia PRIMARY KEY (id_wypozyczalnia)
+    adres VARCHAR2(30) NOT NULL--,
+    --CONSTRAINTS pk_wypozyczalnia PRIMARY KEY (id_wypozyczalnia)
 );
 
 CREATE TABLE c##scott.przedmiot(
     id_przedmiot int NOT NULL,
     id_wypozyczalnia int NOT NULL,
     id_rodzaj_przedmiotu int NOT NULL,
-    numer_seryjnt VARCHAR2(15) NOT NULL,
-    CONSTRAINTS fk_wypozyczalnia FOREIGN KEY (id_wypozyczalnia) REFERENCES c##scott.wypozyczalnia (id_wypozyczalnia),
-    CONSTRAINTS fk_rodzaj_przedmiotu FOREIGN KEY (id_rodzaj_przedmiotu) REFERENCES c##scott.rodzaj_przedmiotu (id_rodzaj_przedmiotu),
-    CONSTRAINTS pk_przedmiot PRIMARY KEY (id_przedmiot)
+    numer_seryjny VARCHAR2(15) NOT NULL--,
+    --CONSTRAINTS fk_wypozyczalnia FOREIGN KEY (id_wypozyczalnia) REFERENCES c##scott.wypozyczalnia (id_wypozyczalnia),
+    --CONSTRAINTS fk_rodzaj_przedmiotu FOREIGN KEY (id_rodzaj_przedmiotu) REFERENCES c##scott.rodzaj_przedmiotu (id_rodzaj_przedmiotu),
+    --CONSTRAINTS pk_przedmiot PRIMARY KEY (id_przedmiot)
 );
 
 CREATE TABLE c##scott.wypozyczenie(
     id_wypozyczenie int NOT NULL,
     id_przedmiot int NOT NULL,
     id_klient int NOT NULL,
-    data_wypozyczenia DATE,
-    data_oddania DATE,
-    CONSTRAINTS fk_przedmiot FOREIGN KEY (id_przedmiot) REFERENCES c##scott.przedmiot (id_przedmiot),
-    CONSTRAINTS fk_klient FOREIGN KEY (id_klient) REFERENCES c##scott.klient (id_klient),
-    CONSTRAINTS pk_wypozyczenie PRIMARY KEY (id_wypozyczenie)
+    data_wypozyczenia TIMESTAMP,
+    data_oddania TIMESTAMP--,
+    --CONSTRAINTS fk_przedmiot FOREIGN KEY (id_przedmiot) REFERENCES c##scott.przedmiot (id_przedmiot),
+    --CONSTRAINTS fk_klient FOREIGN KEY (id_klient) REFERENCES c##scott.klient (id_klient),
+    --CONSTRAINTS pk_wypozyczenie PRIMARY KEY (id_wypozyczenie)
 );
 ---------- FRAGMENTACJA POZIOMA R.P. -----------
 DROP VIEW c##scott.rodzaj_przedmiotu_r;
@@ -135,3 +135,122 @@ EXCEPTION
 END;
 /
 
+---------- FUNKCJONALNOŚCI -----------
+DROP SEQUENCE c##scott.wypozyczalnia_seq;
+DROP SEQUENCE c##scott.wypozyczenie_seq;
+DROP SEQUENCE c##scott.przedmiot_seq;
+DROP VIEW c##scott.dostepne_przedmioty;
+
+CREATE SEQUENCE c##scott.wypozyczalnia_seq
+MINVALUE 0
+START WITH 1
+INCREMENT BY 1
+CACHE 10;
+
+CREATE SEQUENCE c##scott.wypozyczenie_seq
+MINVALUE 0
+START WITH 1
+INCREMENT BY 1
+CACHE 10;
+
+CREATE SEQUENCE c##scott.przedmiot_seq
+MINVALUE 0
+START WITH 1
+INCREMENT BY 1
+CACHE 10;
+
+CREATE OR REPLACE PROCEDURE c##scott.dodaj_wypozyczalnie
+(
+    nazwa_ IN VARCHAR2,
+    adres_ IN VARCHAR2
+)
+AS
+BEGIN
+    INSERT INTO c##scott.wypozyczalnia(id_wypozyczalnia, nazwa, adres)
+    VALUES (c##scott.wypozyczalnia_seq.NEXTVAL, nazwa_, adres_);
+    commit;
+EXCEPTION
+    WHEN others THEN
+        dbms_output.put_line('Error');
+         rollback;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE c##scott.dodaj_przedmiot
+(
+    numer_seryjny_ IN VARCHAR2,
+	id_wypozyczalnia_ IN int,
+    id_rodzaj_przedmiotu_ IN int
+	
+)
+AS
+BEGIN
+    INSERT INTO c##scott.przedmiot(id_przedmiot, id_wypozyczalnia, id_rodzaj_przedmiotu, numer_seryjny)
+    VALUES (c##scott.przedmiot_seq.NEXTVAL, id_wypozyczalnia_, id_rodzaj_przedmiotu_, numer_seryjny_);
+    commit;
+EXCEPTION
+    WHEN others THEN
+        dbms_output.put_line('Error');
+         rollback;
+END;
+/
+
+INSERT INTO c##scott.wypozyczenie(id_wypozyczenie, id_przedmiot, id_klient, data_wypozyczenia, data_oddania)
+    VALUES (c##scott.wypozyczenie_seq.NEXTVAL, 1, id_rodzaj_przedmiotu_, numer_seryjny_);
+    commit;
+
+CREATE VIEW c##scott.dostepne_przedmioty
+AS
+SELECT * FROM c##scott.przedmiot 
+WHERE id_przedmiot NOT IN (
+    SELECT DISTINCT id_przedmiot
+    FROM c##scott.wypozyczenie
+    WHERE CURRENT_TIMESTAMP between data_wypozyczenia AND data_oddania
+);
+
+CREATE OR REPLACE PROCEDURE c##scott.wypozycz_przedmiot
+(
+	id_przedmiot_ IN int,
+    id_klient_ IN int
+)
+AS
+    liczba int;
+BEGIN
+    SELECT count(*) INTO liczba FROM c##scott.przedmiot 
+    WHERE id_przedmiot NOT IN (
+        SELECT DISTINCT id_przedmiot
+        FROM c##scott.wypozyczenie
+        WHERE CURRENT_TIMESTAMP between data_wypozyczenia AND data_oddania
+    ) AND id_przedmiot = id_przedmiot_;
+    IF liczba >= 1 THEN
+        INSERT INTO c##scott.wypozyczenie(id_wypozyczenie, id_przedmiot, id_klient, data_wypozyczenia, data_oddania)
+        VALUES (c##scott.wypozyczenie_seq.NEXTVAL, id_przedmiot_, id_klient_, CURRENT_TIMESTAMP, TO_DATE('2044-DEC-25 17:30','YYYY-MON-DD HH24:MI','NLS_DATE_LANGUAGE=AMERICAN'));
+        commit;
+    END IF;
+EXCEPTION
+    WHEN others THEN
+        dbms_output.put_line('Error');
+         rollback;
+END;
+/
+
+
+
+---------- POPULACJA -----------
+EXEC c##scott.dodaj_wypozyczalnie('Przykladowa', 'Wroclawska 17');
+EXEC c##scott.dodaj_wypozyczalnie('Examplowa', 'Poznanska 33');
+
+EXEC c##scott.dodaj_klienta('Adam', 'Pierwszy', 123456789, 'adam@gmail.com', 'pesel_adam');
+EXEC c##scott.dodaj_klienta('Ewa', 'Druga', 987654321, 'ewa@gmail.com', 'pesel_ewa');
+
+EXEC c##scott.dodaj_rodzaj_przedmiotu('PS5', 'konsola', 'Od SONY');
+EXEC c##scott.dodaj_rodzaj_przedmiotu('XBOX Series X', 'konsola', 'Od Microsoft');
+EXEC c##scott.dodaj_rodzaj_przedmiotu('JBL BT', 'Glosnik', 'Glosnik Bluetooth');
+
+EXEC c##scott.dodaj_przedmiot('123', 1, 1)
+EXEC c##scott.dodaj_przedmiot('153', 2, 1)
+EXEC c##scott.dodaj_przedmiot('1g3', 3, 2)
+
+INSERT INTO c##scott.wypozyczenie(id_wypozyczenie, id_przedmiot, id_klient, data_wypozyczenia, data_oddania)
+    VALUES (c##scott.wypozyczenie_seq.NEXTVAL, 1, 1, CURRENT_TIMESTAMP, TO_DATE('2044-DEC-25 17:30','YYYY-MON-DD HH24:MI','NLS_DATE_LANGUAGE=AMERICAN'));
+    commit;

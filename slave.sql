@@ -11,14 +11,14 @@ CREATE TABLE c##scottt.rodzaj_przedmiotu(
     id_rodzaj_przedmiotu int NOT NULL,
     nazwa VARCHAR2(30) NOT NULL,
     typ VARCHAR2(30) NOT NULL,
-    opis VARCHAR2(50) NOT NULL,
-    CONSTRAINTS pk_rodzaj_przedmiotu PRIMARY KEY (id_rodzaj_przedmiotu)
+    opis VARCHAR2(50) NOT NULL--,
+    --CONSTRAINTS pk_rodzaj_przedmiotu PRIMARY KEY (id_rodzaj_przedmiotu)
 );
 
 CREATE TABLE c##scottt.klient(
     id_klient int NOT NULL,
-    pesel VARCHAR2(11) NOT NULL,
-    CONSTRAINTS pk_klient PRIMARY KEY (id_klient)
+    pesel VARCHAR2(11) NOT NULL--,
+    --CONSTRAINTS pk_klient PRIMARY KEY (id_klient)
 );
 
 ---------- FRAGMENTACJA POZIOMA R.P. -----------
