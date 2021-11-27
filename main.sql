@@ -113,10 +113,13 @@ CREATE OR REPLACE PROCEDURE c##scott.dodaj_klienta
 	pesel_ in VARCHAR2
 )
 AS
+    id int;
 BEGIN
+    id := c##scott.klient_seq.NEXTVAL;
     INSERT INTO c##scott.klient(id_klient, imie, nazwisko, nr_telefonu, email)
-    VALUES (c##scott.klient_seq.NEXTVAL, imie_, nazwisko_, nr_telefonu_, email_);
-	c##scott.dodaj_klienta_pesel(pesel_);
+    VALUES (id, imie_, nazwisko_, nr_telefonu_, email_);
+    INSERT INTO c##scottt.klient@DATABASE_LINK1(id_klient, pesel)
+    VALUES (id, pesel_);
     commit;
 EXCEPTION
     WHEN others THEN
@@ -124,3 +127,4 @@ EXCEPTION
          rollback;
 END;
 /
+
