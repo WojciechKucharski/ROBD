@@ -1,0 +1,4 @@
+'/' as sysdba
+create user nick identified by password;
+grant unlimited tablespace to nick;
+grant resource,connect,dba to nick;
