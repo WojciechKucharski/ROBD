@@ -29,6 +29,7 @@ class Table:
     def title(self):
         return self.columns[0].replace("id_", "")
 
+
 class Item(Table):
     def update(self):
         self.stored_records = [
@@ -60,24 +61,30 @@ class Database:
         self.user, self.password, self.ip = user, password, ip
         self.cursor = self.connection.cursor()
 
+        self.table_names = [name[0] for name in self.cursor.execute(
+            f"SELECT table_name FROM all_tables WHERE owner = '{self.user.upper()}'")]
+        self.column_names = {
+            table_name: [desc[0] for desc in self.cursor.execute(f"select * from {self.user}.{table_name}").description]
+            for table_name in self.table_names
+        }
 
         self.client = Table(cursor=self.cursor, query=f"SELECT * FROM {self.user}.klient_r", columns=["id_klient",
-                                                                                                       "imie",
-                                                                                                       "nazwisko",
-                                                                                                       "nr_telefonu",
-                                                                                                       "email"])
+                                                                                                      "imie",
+                                                                                                      "nazwisko",
+                                                                                                      "nr_telefonu",
+                                                                                                      "email", "pesel"])
 
         self.item = Item(cursor=self.cursor, query=f"SELECT * FROM {self.user}.",
                          columns=["id_przedmiot", "id_wypozyczalnia", "id_rodzaj_przedmiotu", "nazwa_przedmiotu",
                                   "dostepny"])
 
         self.item_type = Table(cursor=self.cursor, query=f"SELECT * FROM {self.user}.rodzaj_przedmiotu_r",
-                                  columns=["id_rodzaj_przedmiotu", "nazwa", "typ", "opis"])
+                               columns=["id_rodzaj_przedmiotu", "nazwa", "typ", "opis"])
         self.rental = Table(cursor=self.cursor, query=f"SELECT * FROM {self.user}.wypozyczalnia",
-                             columns=["id_wypozyczalnia", "nazwa", "adres"])
+                            columns=["id_wypozyczalnia", "nazwa", "adres"])
         self.rent_info = Table(cursor=self.cursor, query=f"SELECT * FROM {self.user}.wypozyczenie",
-                                  columns=["id_wypozyczenie", "id_przedmiot", "id_klient", "data_wypozyczenia",
-                                           "data_oddania"])
+                               columns=["id_wypozyczenie", "id_przedmiot", "id_klient", "data_wypozyczenia",
+                                        "data_oddania"])
 
     def return_item(self, item_key: int) -> bool:
         returned = False
