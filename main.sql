@@ -289,4 +289,10 @@ WHERE id_przedmiot IN (
     FROM c##robd.wypozyczenie
     WHERE CURRENT_TIMESTAMP between data_wypozyczenia AND data_oddania
 );
+
+DROP VIEW c##robd.aktywne_wypozyczenia;
+CREATE VIEW c##robd.aktywne_wypozyczenia
+AS
+SELECT * FROM c##robd.wypozyczenie WHERE CURRENT_TIMESTAMP between data_wypozyczenia AND data_oddania
 --######################################################################################
+

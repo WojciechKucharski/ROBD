@@ -129,3 +129,9 @@ FOR c##robd.wypozycz_przedmiot@DB_LINK;
 DROP SYNONYM c##robd.oddodaj_przedmiot;
 CREATE SYNONYM c##robd.oddodaj_przedmiot
 FOR c##robd.oddodaj_przedmiot@DB_LINK;
+
+
+DROP VIEW c##robd.aktywne_wypozyczenia;
+CREATE VIEW c##robd.aktywne_wypozyczenia
+AS
+SELECT * FROM c##robd.wypozyczenie WHERE CURRENT_TIMESTAMP between data_wypozyczenia AND data_oddania
