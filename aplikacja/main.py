@@ -146,10 +146,6 @@ def main():
             print("Coś poszło nie tak")
 
 
-def test():
-    with orm.Database(user="c##robd", password="123", ip="192.168.56.1") as db:
-        pass
-
 if __name__ == "__main__":
     main()
 
